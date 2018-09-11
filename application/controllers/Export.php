@@ -16,7 +16,17 @@ class Export extends CI_Controller {
             $mpdf = new \Mpdf\Mpdf(
                 [
                 'tempDir' => FCPATH . '/application/pdf',
-                'default_font' => 'Garuda'
+                'fontDir' => array_merge($fontDirs, [
+                    FCPATH . '/font',
+                ]),
+                'fontdata' => $fontData + [
+                    'kanit' => [
+                        'R' => 'Kanit/Kanit-Regular.ttf',
+                        'I' => 'Kanit/Kanit-Italic.ttf'
+                    ]
+                ],
+                'default_font' => 'kanit'
+                // 'default_font' => 'Garuda'
                 ]
             );
 
@@ -34,20 +44,63 @@ class Export extends CI_Controller {
                 'expire_date' => date('Y-m-d')
             ];
 
-            $mpdf->SetColumns(2, 'J', 3);
+            // $mpdf->SetColumns(2, 'J', 3);
             $stylesheet = file_get_contents(FCPATH.'frontend/stylesheet.css'); // external css
             $mpdf->WriteHTML($stylesheet,1);
-            ob_start();
-            $this->load->view('hello_world',$data);
-            $html = ob_get_contents();
-            $mpdf->WriteHTML($html,2);
-            $mpdf->AddColumn();
-            $mpdf->Output(time().'.pdf','D');
+            $header = $this->load->view('hello_world',$data,TRUE);
+            $content = $this->load->view('content',$data,TRUE);
+            // $html = ob_get_contents();
+            $mpdf->WriteHTML($header,2);
+            $mpdf->WriteHTML($content,3);
+            // $mpdf->AddColumn();
+            $mpdf->Output();
         } catch (\Mpdf\MpdfException $e) { // Note: safer fully qualified exception name used for catch
             // Process the exception, log, print etc.
             echo $e->getMessage();
         }
 
     }
+
+    public function ex() {
+        try {
+            $defaultConfig = (new Mpdf\Config\ConfigVariables())->getDefaults();
+            $fontDirs = $defaultConfig['fontDir'];
+
+            $defaultFontConfig = (new Mpdf\Config\FontVariables())->getDefaults();
+            $fontData = $defaultFontConfig['fontdata'];
+
+
+            $mpdf = new \Mpdf\Mpdf(
+                [
+                'tempDir' => FCPATH . '/application/pdf',
+                'fontDir' => array_merge($fontDirs, [
+                    FCPATH . '/font',
+                ]),
+                'fontdata' => $fontData + [
+                    'kanit' => [
+                        'R' => 'Kanit/Kanit-Regular.ttf',
+                        'I' => 'Kanit/Kanit-Italic.ttf'
+                    ]
+                ],
+                'default_font' => 'kanit'
+                // 'default_font' => 'Garuda'
+                ]
+            );
+
+
+            $mpdf->SetDisplayMode('fullwidth');
+            $stylesheet = file_get_contents(FCPATH.'frontend/stylesheet2.css'); // external css
+            $mpdf->WriteHTML($stylesheet,1);
+            $header = $this->load->view('layout',$data,TRUE);
+            $mpdf->WriteHTML($header,2);
+
+            $mpdf->Output();
+        } catch (\Mpdf\MpdfException $e) { // Note: safer fully qualified exception name used for catch
+            // Process the exception, log, print etc.
+            echo $e->getMessage();
+        }
+
+    }
+
 
 }
